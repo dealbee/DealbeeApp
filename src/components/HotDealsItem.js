@@ -42,7 +42,6 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     height: 120,
-    marginBottom: 5,
     backgroundColor: "#fff",
   },
   contentContainer: {

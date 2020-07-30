@@ -20,7 +20,6 @@ const style = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     height: 100,
-    marginBottom: 5,
     backgroundColor: "#fff",
   },
   contentContainer: {

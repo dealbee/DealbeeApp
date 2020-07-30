@@ -3,7 +3,7 @@ import { View, StyleSheet } from "react-native";
 
 import { ItemThumb, ItemTitle, ItemPrice, ItemInteraction } from "./BaseItem";
 
-export default function HomeDealsItem({ item }) {
+export default function PinnedDealsItem({ item }) {
   return (
     <View style={style.background}>
       <ItemThumb item={item}></ItemThumb>
@@ -20,7 +20,6 @@ const style = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     height: 100,
-    marginBottom: 5,
     backgroundColor: "#fff",
   },
   contentContainer: {

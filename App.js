@@ -1,5 +1,6 @@
+import "./global";
 import * as React from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, View, TouchableHighlight } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { SimpleLineIcons } from "@expo/vector-icons";
@@ -10,6 +11,10 @@ import NotificationScreen from "./src/screens/notification-tab/NotificationScree
 import ProfileScreen from "./src/screens/profile-tab/ProfileScreen";
 
 const Tab = createBottomTabNavigator();
+
+const AddDeal = () => {
+  return <View></View>;
+};
 
 export default function App() {
   return (
@@ -66,10 +71,14 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
+  addButton: {
+    position: "absolute",
+    // bottom: 0, // space from bottombar
+    height: 60,
+    width: 60,
+    borderRadius: 36,
     justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#4496D6",
   },
 });

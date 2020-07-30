@@ -72,7 +72,7 @@ export function ItemInteraction({ item }) {
         iconName="bubbles"
         iconSize={15}
         iconColor="grey"
-        value={item.itemInfText ? item.itemInfText : 0}
+        value={item.postcount ? item.postcount - 1 : 0}
       />
     </View>
   );
@@ -84,9 +84,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   textTitle: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#3399FF",
-    fontWeight: "bold",
+    fontWeight: "normal",
   },
   containerTitle: {},
   containerPrice: {},
