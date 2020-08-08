@@ -1,4 +1,4 @@
 {
-  "hostApi": "https://dealbee.vn/f/api/dealbee",
-  "host": "https://dealbee.vn"
+  "hostApi": "https://dealbee.herokuapp.com/api/dealbee",
+  "host": "https://dealbee.herokuapp.com"
 }

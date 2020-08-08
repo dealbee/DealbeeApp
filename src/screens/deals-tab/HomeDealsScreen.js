@@ -113,11 +113,11 @@ export default function HomeDealsScreen({ navigation }) {
       "hot"
     );
     fetchData(
-      host.hostApi + "/topics?limit=10&sorted=TIME_LEFT_DESC&flashdeal=true",
+      host.hostApi + "/topics?limit=10&sorted=TIME_LEFT_ASC&flashdeal=true",
       "flash"
     );
     fetchData(host.hostApi + "/topics?limit=10&sorted=UPVOTE_DESC", "best");
-    fetchData(host.hostApi + "/topics?limit=10&sorted=COMMENT_DESC", "popular");
+    fetchData(host.hostApi + "/topics?limit=10&sorted=VIEW_DESC", "popular");
   }
 
   function fetchData(url, type) {
@@ -154,12 +154,14 @@ export default function HomeDealsScreen({ navigation }) {
   const formatData = function (data) {
     data.map((e) => {
       e.key = e["_key"];
-      e.currency = e.currency.split(" - ")[0];
+      if (e.currency) {
+        e.currency = e.currency.split(" - ")[0];
+      } else e.currency = "";
       if (e.thumb) {
         if (e.thumb[0] == "/") {
           e.thumb = `${host.host}${e.thumb}`;
         }
-      }
+      } else e.thumb = "";
       if (e.discountPrice)
         e.discountPrice = e.discountPrice
           .toString()

@@ -5,7 +5,7 @@ import BaseDealsScreen from "./BaseDealsScreen";
 export default function PopularDealsScreen({ navigation }) {
   return (
     <BaseDealsScreen
-      queryString="/topics?limit=20&sorted=COMMENT_DESC"
+      queryString="/topics?limit=20&sorted=VIEW_DESC"
       flatListItems="PopularDealsItem"
       navigation={navigation}
     ></BaseDealsScreen>

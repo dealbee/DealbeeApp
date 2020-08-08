@@ -33,19 +33,152 @@ import FlashDealsScreen from "./FlashDealsScreen";
 import BestDealsScreen from "./BestDealsScreen";
 import PopularDealsScreen from "./PopularDealsScreen";
 import PinnedDealsScreen from "./PinnedDealsScreen";
+import PinnedDealsItem from "../../components/PinnedDealsItem";
 import { color } from "react-native-reanimated";
 
 const TopTab = createMaterialTopTabNavigator();
 
-function Home() {
+function Search({navigation}) {
+  const [searchStr, setSearchStr] = useState("");
+  const [deals, setDeals] = useState([]);
+  const [offset, setOffset] = useState(0);
+  const [isLoadingTopic, setLoadingTopic] = useState(false);
+  const [total, setTotal] = useState(0);
+
+  function replaceSpace(str) {
+    var res = str.trim().split("");
+    var spaceCount = 0, index, i = 0;
+    for (i = 0; i < res.length; i++) {
+      if (res[i] == " ") ++spaceCount;
+    }
+    index = res.length + spaceCount * 2;
+    for (i = res.length - 1; i >= 0; i--) {
+      if (res[i] == " ") {
+        res[index - 1] = '0';
+        res[index - 2] = '2';
+        res[index - 3] = '%'; 
+        index = index - 3; 
+      } else {
+        res[index - 1] = res[i];
+        index--; 
+      }
+    }
+    return res.join("");
+  }
+
+  function fetchData(off, isLoadmore) {
+    var url = host.hostApi + "/topics/search?offset=" + off + "&limit=20&text=" + replaceSpace(searchStr);
+    console.log(url);
+    fetch(url)
+      .then((response) => response.json())
+      .then((json) => {setTotal(json.total); return json;})
+      .then((json) => formatData(json.topics))
+      .then((json) => isLoadmore ? setDeals(deals.concat(json)) : setDeals(json))
+      .catch((error) => console.error(error))
+      .finally(() => {setLoadingTopic(false); setOffset(off)});
+  }
+
+  const formatData = function (data) {
+    data.map((e) => {
+      e.key = e["_key"];
+      if (e.currency) {
+        e.currency = e.currency.split(" - ")[0];
+      } else e.currency = "";
+      if (e.thumb) {
+        if (e.thumb[0] == "/") {
+          e.thumb = `${host.host}${e.thumb}`;
+        }
+      } else e.thumb = "";
+      if (e.discountPrice)
+        e.discountPrice = e.discountPrice
+          .toString()
+          .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      if (e.price)
+        e.price = e.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      return e;
+    });
+    return data;
+  };
+
+  const handleLoadMore = () => {
+    if (offset > total) return;
+    fetchData(offset + 20, true);
+  };
+
+  const renderItem = ({ item }) => {
+    return (
+      <TouchableOpacity
+        onPress={() => {
+          navigation.navigate("Details", { tid: item.tid });
+        }}
+      >
+        <PinnedDealsItem item={item}></PinnedDealsItem>
+      </TouchableOpacity>
+    );
+  }
+
+  return (
+    <>
+      <View style={styles.searchScreenContainer}>
+        <View style={styles.searchBarContainer}>
+          <Text style={styles.searchBarText}>Nhập từ khóa</Text>
+          <View style={styles.searchBar}>
+            <TextInput
+              style={styles.inputSearch}
+              placeholder="Bạn cần tìm gì..."
+              onChangeText={text => setSearchStr(text)}
+              value={searchStr}
+            />
+            <SimpleLineIcons 
+              style={styles.searchIcon} 
+              name="magnifier" size={20} 
+              color="#000" 
+              onPress={() => {
+                setDeals([]);
+                setLoadingTopic(true);
+                fetchData(0, false);
+              }}
+            />
+          </View>
+          <Text style={styles.searchResultText}>Kết quả</Text>
+        </View>
+        <View style={styles.searchResultContainer}>
+          {isLoadingTopic ? (
+            <ActivityIndicator />
+          ) : (
+            <View>
+              <FlatList
+                data={deals}
+                keyExtractor={(item) => item._key}
+                onEndReached={handleLoadMore}
+                renderItem={renderItem}
+                getItemLayout={(data, index) => ({
+                  length: 100,
+                  offset: 100 * index,
+                  index,
+                })}
+              ></FlatList>
+            </View>
+          )}
+        </View>
+      </View>
+    </>
+  )
+}
+
+function Home({navigation}) {
   return (
     <>
       <Header
         leftContainerStyle={{
-          flex: 5,
+          flex: 10,
         }}
         centerContainerStyle={{
-          flex: 95,
+          flex: 80,
+          alignItems: "center"
+        }}
+        rightContainerStyle={{
+          flex: 10,
         }}
         placement="left"
         leftComponent={
@@ -54,26 +187,20 @@ function Home() {
               uri:
                 "https://res.cloudinary.com/tkm/image/upload/c_scale,h_128/v1574161033/logo/tkm-round.png",
             }}
-            style={{ width: 30, height: 30 }}
+            style={{ width: 40, height: 40 }}
           />
         }
         centerComponent={
-          <SearchBar
-            placeholder="Type Here..."
-            lightTheme
-            placeholder="Search"
-            round
-            containerStyle={{
-              borderBottomColor: "transparent",
-              borderTopColor: "transparent",
-              backgroundColor: "transparent",
-              width: "100%",
-            }}
-            inputContainerStyle={{
-              backgroundColor: "white",
-            }}
-          />
+          { text: 'Dealbee', style: { color: '#fff', fontSize: 20 } }
         }
+        rightComponent={{ 
+          icon: 'search', 
+          color: '#fff', 
+          size: 26, 
+          onPress: () => {
+            navigation.navigate("Search");
+          }
+        }}
         statusBarProps={{
           barStyle: "light-content",
           translucent: true,
@@ -177,12 +304,14 @@ function Details({ navigation, route }) {
 
   const formatData = function (data) {
     data.key = data["_key"];
-    data.currency = data.currency.split(" - ")[0];
+    if (data.currency)
+      data.currency = data.currency.split(" - ")[0];
+    else data.currency = "";
     if (data.thumb) {
       if (data.thumb[0] == "/") {
         data.thumb = `${host.host}${data.thumb}`;
       }
-    }
+    } else data.thumb = "";
     if (data.discountPrice)
       data.discountPrice = data.discountPrice
         .toString()
@@ -844,7 +973,7 @@ function Comment({ navigation, comment, index }) {
           <View style={styles.commentBoxHeaderUserNameContainer}>
             <Text style={styles.commentBoxHeaderUserName}>
               {item.user.username} {"("}
-              {item.user.reputation}
+              {item.user.reputation ? item.user.reputation : 0}
               {")"}
             </Text>
           </View>
@@ -916,12 +1045,59 @@ export default function DealsScreen({ queryString, flatListItems }) {
           headerShown: false,
         }}
       />
-      <Stack.Screen name="Details" component={Details} />
+      <Stack.Screen name="Details" component={Details} options={{title: "Chi tiết"}} />
+      <Stack.Screen name="Search" component={Search} options={{title: "Tìm kiếm"}} />
     </Stack.Navigator>
   );
 }
 
 const styles = StyleSheet.create({
+  searchScreenContainer: {
+    flex: 1,
+    flexDirection: "column",
+    backgroundColor: "#fff"
+  },
+  searchBarContainer: {
+    // flex: 20,
+    // flexDirection: "column",
+    height: 120,
+    marginHorizontal: 15,
+    marginTop: 5,
+    borderBottomColor: "#CED0D4",
+    borderBottomWidth: 0.5,
+  },
+  searchBarText: {
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  searchBar: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  searchIcon: {
+    padding: 10,
+  },
+  inputSearch: {
+    flex: 1,
+    paddingTop: 10,
+    paddingRight: 10,
+    paddingBottom: 10,
+    paddingLeft: 0,
+    backgroundColor: '#fff',
+    color: '#424242',
+  },
+  searchResultContainer: {
+    flex: 80,
+    flexDirection: "column",
+    marginTop: 5,
+  },
+  searchResultText: {
+    fontSize: 20,
+    fontWeight: "bold",
+  },
   detailContainer: {
     flex: 1,
   },

@@ -5,7 +5,12 @@ import { SimpleLineIcons } from "@expo/vector-icons";
 export function ItemThumb({ item }) {
   return (
     <View style={styles.thumbContainer}>
-      <Image style={styles.thumbImg} source={{ uri: item.thumb }}></Image>
+      {item.thumb.length == 0 ? (
+        <Image style={styles.thumbImg} source={require("../assets/no-img-found.png")}></Image>
+      ) : (
+        <Image style={styles.thumbImg} source={{ uri: item.thumb }}></Image>
+      )}
+      
     </View>
   );
 }

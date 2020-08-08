@@ -42,12 +42,14 @@ export default function BaseDealsScreen({
   const formatData = function (data) {
     data.map((e) => {
       e.key = e["_key"];
-      e.currency = e.currency.split(" - ")[0];
+      if (e.currency) {
+        e.currency = e.currency.split(" - ")[0];
+      } else e.currency = "";
       if (e.thumb) {
         if (e.thumb[0] == "/") {
           e.thumb = `${host.host}${e.thumb}`;
         }
-      }
+      } else e.thumb = "";
       if (e.discountPrice)
         e.discountPrice = e.discountPrice
           .toString()
