@@ -9,7 +9,7 @@
     ],
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "",
+    "icon": "./src/assets/Dealbee-white.png",
     "splash": {
       "image": "",
       "resizeMode": "contain",
@@ -22,7 +22,13 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.dealbeeapp.thesis",
+      "buildNumber": "1.0.0"
+    },
+    "android": {
+      "package": "com.dealbeeapp.thesis",
+      "versionCode": 1
     },
     "description": ""
   }

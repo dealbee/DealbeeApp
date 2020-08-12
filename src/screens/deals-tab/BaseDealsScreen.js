@@ -23,20 +23,26 @@ export default function BaseDealsScreen({
   const [deals, setDeals] = useState([]);
   const [isLoading, setLoading] = useState(true);
   const [offset, setOffset] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
-    fetchData(offset);
+    fetchData(offset, true);
   }, []);
 
-  function fetchData(off) {
+  function fetchData(off, isRefresh) {
     var url = host.hostApi + queryString + "&offset=" + off;
     console.log(url);
     fetch(url)
       .then((response) => response.json())
+      .then((json) => {setTotal(json.total); return json;})
       .then((json) => formatData(json.topics))
-      .then((json) => setDeals(deals.concat(json)))
+      .then((json) => isRefresh ? setDeals(json) : setDeals(deals.concat(json)))
       .catch((error) => console.error(error))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        setRefreshing(false);
+      });
   }
 
   const formatData = function (data) {
@@ -61,9 +67,22 @@ export default function BaseDealsScreen({
     return data;
   };
 
+  useEffect(() => {
+    if (offset <= total) 
+      fetchData(offset, false);
+  }, [offset]);
+
   const handleLoadMore = () => {
-    fetchData(offset + 20);
     setOffset(offset + 20);
+  };
+
+  useEffect(() => {
+    if (refreshing) 
+      fetchData(0, true);
+  }, [refreshing]);
+
+  const handleRefresh = () => {
+    setRefreshing(true);
   };
 
   const renderItem = ({ item }) => {
@@ -122,13 +141,13 @@ export default function BaseDealsScreen({
   };
   return (
     <>
-      {isLoading ? (
+      {isLoading || refreshing ? (
         <ActivityIndicator />
       ) : (
         <View>
           <FlatList
             data={deals}
-            keyExtractor={(item) => item._key}
+            keyExtractor={(item) => item._key + offset}
             onEndReached={handleLoadMore}
             renderItem={renderItem}
             getItemLayout={(data, index) => ({
@@ -136,6 +155,8 @@ export default function BaseDealsScreen({
               offset: 100 * index,
               index,
             })}
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
           ></FlatList>
         </View>
       )}

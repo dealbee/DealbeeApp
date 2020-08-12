@@ -5,7 +5,7 @@ import BaseDealsScreen from "./BaseDealsScreen";
 export default function PinnedDealsScreen({ navigation }) {
   return (
     <BaseDealsScreen
-      queryString="/topics?limit=20"
+      queryString="/pinned-topics?limit=20"
       flatListItems="HomeDealsItem"
       navigation={navigation}
     ></BaseDealsScreen>

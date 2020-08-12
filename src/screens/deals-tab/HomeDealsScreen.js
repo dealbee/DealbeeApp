@@ -107,7 +107,7 @@ export default function HomeDealsScreen({ navigation }) {
   }, []);
 
   function getData() {
-    fetchData(host.hostApi + "/topics?limit=10", "pinned");
+    fetchData(host.hostApi + "/pinned-topics?limit=10", "pinned");
     fetchData(
       host.hostApi + "/topics?limit=10&sorted=DISCOUNT_MONEY_DESC&currency=vnd",
       "hot"

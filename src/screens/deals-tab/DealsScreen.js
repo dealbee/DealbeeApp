@@ -14,6 +14,7 @@ import {
   Modal,
   TextInput,
   Alert,
+  RefreshControl,
 } from "react-native";
 import { Header, SearchBar, Badge } from "react-native-elements";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
@@ -183,10 +184,7 @@ function Home({navigation}) {
         placement="left"
         leftComponent={
           <Image
-            source={{
-              uri:
-                "https://res.cloudinary.com/tkm/image/upload/c_scale,h_128/v1574161033/logo/tkm-round.png",
-            }}
+            source={require("../../assets/dealbee-icon.png")}
             style={{ width: 40, height: 40 }}
           />
         }
@@ -294,6 +292,7 @@ function Details({ navigation, route }) {
   const urlGetTopic = host.hostApi + "/topics/" + route.params.tid;
 
   useEffect(() => {
+    console.log(urlGetTopic);
     fetch(urlGetTopic)
       .then((response) => response.json())
       .then((json) => formatData(json))
@@ -301,6 +300,25 @@ function Details({ navigation, route }) {
       .catch((error) => console.error(error))
       .finally(() => setLoadingTopic(false));
   }, []);
+
+  useEffect(() => {
+    if (item && global.user) {
+      if (item.mainPost.upvotedBy.includes(global.user.uid)) {
+        setUpvote(true);
+        console.log("setUpvote(true)");
+      } else {
+        setUpvote(false);
+        console.log("setUpvote(false)");
+      }
+      if (item.mainPost.downvotedBy.includes(global.user.uid)) {
+        setDownvote(true);
+        console.log("setDownvote(true)");
+      } else {
+        setDownvote(false);
+        console.log("setDownvote(false)");
+      }
+    }
+  }, [item]);
 
   const formatData = function (data) {
     data.key = data["_key"];
@@ -381,12 +399,15 @@ function Details({ navigation, route }) {
         })
           .then(function (response) {
             console.log(response.data);
-            setUpvote(response.data.payload.upvote);
-            setDownvote(response.data.payload.downvote);
             var newItem = { ...item };
             newItem.upvotes = response.data.payload.post.upvotes;
             newItem.downvotes = response.data.payload.post.downvotes;
             newItem.votes = response.data.payload.post.votes;
+            var index = newItem.mainPost.downvotedBy.indexOf(data.uid);
+            if (index > -1) {
+              newItem.mainPost.downvotedBy.splice(index, 1);
+            }
+            newItem.mainPost.upvotedBy.push(data.uid);
             setItem(newItem);
           })
           .catch(function (error) {
@@ -406,12 +427,14 @@ function Details({ navigation, route }) {
         })
           .then(function (response) {
             console.log(response.data);
-            setUpvote(response.data.payload.upvote);
-            setDownvote(response.data.payload.downvote);
             var newItem = { ...item };
             newItem.upvotes = response.data.payload.post.upvotes;
             newItem.downvotes = response.data.payload.post.downvotes;
             newItem.votes = response.data.payload.post.votes;
+            var index = newItem.mainPost.upvotedBy.indexOf(data.uid);
+            if (index > -1) {
+              newItem.mainPost.upvotedBy.splice(index, 1);
+            }
             setItem(newItem);
           })
           .catch(function (error) {
@@ -439,12 +462,15 @@ function Details({ navigation, route }) {
         })
           .then(function (response) {
             console.log(response.data);
-            setUpvote(response.data.payload.upvote);
-            setDownvote(response.data.payload.downvote);
             var newItem = { ...item };
             newItem.upvotes = response.data.payload.post.upvotes;
             newItem.downvotes = response.data.payload.post.downvotes;
             newItem.votes = response.data.payload.post.votes;
+            var index = newItem.mainPost.upvotedBy.indexOf(data.uid);
+            if (index > -1) {
+              newItem.mainPost.upvotedBy.splice(index, 1);
+            }
+            newItem.mainPost.downvotedBy.push(data.uid);
             setItem(newItem);
           })
           .catch(function (error) {
@@ -463,12 +489,14 @@ function Details({ navigation, route }) {
         })
           .then(function (response) {
             console.log(response.data);
-            setUpvote(response.data.payload.upvote);
-            setDownvote(response.data.payload.downvote);
             var newItem = { ...item };
             newItem.upvotes = response.data.payload.post.upvotes;
             newItem.downvotes = response.data.payload.post.downvotes;
             newItem.votes = response.data.payload.post.votes;
+            var index = newItem.mainPost.downvotedBy.indexOf(data.uid);
+            if (index > -1) {
+              newItem.mainPost.downvotedBy.splice(index, 1);
+            }
             setItem(newItem);
           })
           .catch(function (error) {
@@ -485,6 +513,10 @@ function Details({ navigation, route }) {
     } else {
       setModalCmtVisible(true);
     }
+  };
+
+  const handleRefresh = () => {
+    navigation.replace("Temp", { tid: item.tid });
   };
 
   return (
@@ -507,15 +539,16 @@ function Details({ navigation, route }) {
                 onSubmit={(values) => {
                   var url = host.hostApi + "/posts/";
                   console.log(url);
+                  console.log({ ...values, uid: global.user.uid, tid: item.tid });
                   axios({
                     method: "POST",
                     url: url,
                     headers: {},
-                    data: { ...values, uid: global.user, tid: item.tid },
+                    data: { ...values, uid: global.user.uid, tid: item.tid },
                   })
                     .then(function (response) {
-                      setModalCmtVisible(false);
                       Alert.alert("Thêm bình luận thành công.");
+                      navigation.replace("Temp", { tid: item.tid });
                     })
                     .catch(function (error) {
                       console.log(error);
@@ -564,14 +597,9 @@ function Details({ navigation, route }) {
                     .then(function (response) {
                       global.user = response.data;
                       global.isLogined = true;
-                      if (item.mainPost.upvotedBy.includes(global.user.uid)) {
-                        setUpvote(true);
-                      }
-                      if (item.mainPost.downvotedBy.includes(global.user.uid)) {
-                        setDownvote(true);
-                      }
-                      setModalVisible(false);
+
                       Alert.alert("Đăng nhập thành công.");
+                      navigation.replace("Temp", { tid: item.tid });
                     })
                     .catch(function (error) {
                       console.log(error);
@@ -606,7 +634,14 @@ function Details({ navigation, route }) {
             </View>
           </Modal>
 
-          <ScrollView style={styles.detailContainer}>
+          <ScrollView 
+            style={styles.detailContainer}
+            refreshControl={
+              <RefreshControl
+                onRefresh={handleRefresh}
+              />
+            }
+          >
             <View style={styles.infoContainer}>
               <View style={styles.sliderBox}>
                 <SliderBox
@@ -777,6 +812,25 @@ function Comment({ navigation, comment, index }) {
   const [upvote, setUpvote] = useState(false);
   const [downvote, setDownvote] = useState(false);
 
+  useEffect(() => {
+    if (item && global.user) {
+      if (item.upvotedBy.includes(global.user.uid)) {
+        setUpvote(true);
+        console.log("setUpvote(true)");
+      } else {
+        setUpvote(false);
+        console.log("setUpvote(false)");
+      }
+      if (item.downvotedBy.includes(global.user.uid)) {
+        setDownvote(true);
+        console.log("setDownvote(true)");
+      } else {
+        setDownvote(false);
+        console.log("setDownvote(false)");
+      }
+    }
+  }, [item]);
+
   const upvoteCmtPressHandler = (pid) => {
     if (!global.isLogined) {
       setModalVisible(true);
@@ -794,12 +848,15 @@ function Comment({ navigation, comment, index }) {
         })
           .then(function (response) {
             console.log(response.data);
-            setUpvote(response.data.payload.upvote);
-            setDownvote(response.data.payload.downvote);
             var newItem = { ...item };
             newItem.upvotes = response.data.payload.post.upvotes;
             newItem.downvotes = response.data.payload.post.downvotes;
             newItem.votes = response.data.payload.post.votes;
+            var index = newItem.downvotedBy.indexOf(data.uid);
+            if (index > -1) {
+              newItem.downvotedBy.splice(index, 1);
+            }
+            newItem.upvotedBy.push(data.uid);
             setItem(newItem);
           })
           .catch(function (error) {
@@ -819,11 +876,13 @@ function Comment({ navigation, comment, index }) {
         })
           .then(function (response) {
             console.log(response.data);
-            setUpvote(response.data.payload.upvote);
-            setDownvote(response.data.payload.downvote);
             var newItem = { ...item };
             newItem.upvotes = response.data.payload.post.upvotes;
             newItem.downvotes = response.data.payload.post.downvotes;
+            var index = newItem.upvotedBy.indexOf(data.uid);
+            if (index > -1) {
+              newItem.upvotedBy.splice(index, 1);
+            }
             setItem(newItem);
           })
           .catch(function (error) {
@@ -851,12 +910,15 @@ function Comment({ navigation, comment, index }) {
         })
           .then(function (response) {
             console.log(response.data);
-            setUpvote(response.data.payload.upvote);
-            setDownvote(response.data.payload.downvote);
             var newItem = { ...item };
             newItem.upvotes = response.data.payload.post.upvotes;
             newItem.downvotes = response.data.payload.post.downvotes;
             newItem.votes = response.data.payload.post.votes;
+            var index = newItem.upvotedBy.indexOf(data.uid);
+            if (index > -1) {
+              newItem.upvotedBy.splice(index, 1);
+            }
+            newItem.downvotedBy.push(data.uid);
             setItem(newItem);
           })
           .catch(function (error) {
@@ -875,12 +937,14 @@ function Comment({ navigation, comment, index }) {
         })
           .then(function (response) {
             console.log(response.data);
-            setUpvote(response.data.payload.upvote);
-            setDownvote(response.data.payload.downvote);
             var newItem = { ...item };
             newItem.upvotes = response.data.payload.post.upvotes;
             newItem.downvotes = response.data.payload.post.downvotes;
             newItem.votes = response.data.payload.post.votes;
+            var index = newItem.downvotedBy.indexOf(data.uid);
+            if (index > -1) {
+              newItem.downvotedBy.splice(index, 1);
+            }
             setItem(newItem);
           })
           .catch(function (error) {
@@ -914,15 +978,8 @@ function Comment({ navigation, comment, index }) {
                 .then(function (response) {
                   global.user = response.data;
                   global.isLogined = true;
-                  console.log(item);
-                  if (item.upvotedBy.includes(global.user.uid)) {
-                    setUpvote(true);
-                  }
-                  if (item.downvotedBy.includes(global.user.uid)) {
-                    setDownvote(true);
-                  }
-                  setModalVisible(false);
                   Alert.alert("Đăng nhập thành công.");
+                  navigation.replace("Temp", { tid: item.tid });
                 })
                 .catch(function (error) {
                   console.log(error);
@@ -939,6 +996,7 @@ function Comment({ navigation, comment, index }) {
                   placeholder="Nhập username ... "
                 ></TextInput>
                 <TextInput
+                  secureTextEntry
                   onChangeText={props.handleChange("password")}
                   value={props.values.password}
                   style={styles.inputLogin}
@@ -1029,6 +1087,13 @@ function Comment({ navigation, comment, index }) {
   );
 }
 
+function Temp({navigation, route}) {
+  navigation.replace("Details", { tid: route.params.tid });
+  return (
+    <></>
+  )
+}
+
 const Stack = createStackNavigator();
 
 export default function DealsScreen({ queryString, flatListItems }) {
@@ -1047,6 +1112,7 @@ export default function DealsScreen({ queryString, flatListItems }) {
       />
       <Stack.Screen name="Details" component={Details} options={{title: "Chi tiết"}} />
       <Stack.Screen name="Search" component={Search} options={{title: "Tìm kiếm"}} />
+      <Stack.Screen name="Temp" component={Temp} options={{title: "Temporary"}} />
     </Stack.Navigator>
   );
 }
